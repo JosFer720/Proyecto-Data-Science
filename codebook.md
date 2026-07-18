@@ -1,3 +1,9 @@
+## Metadatos del dataset
+
+- **Fecha de extracción:** 2026-07-18.
+- **Fuente:** buscador de establecimientos educativos del MINEDUC, `http://www.mineduc.gob.gt/BUSCAESTABLECIMIENTO_GE/`.
+- **Parámetros de búsqueda:** `NIVEL ESCOLAR: DIVERSIFICADO`, consultado para los 22 departamentos oficiales de Guatemala más `CIUDAD CAPITAL` (entidad separada de `GUATEMALA` en el buscador).
+
 ## Diccionario de variables
 
 | Variable | Descripción | Tipo de dato | Dominio permitido / valores posibles | Tratamiento aplicado en limpieza | Variables derivadas |
