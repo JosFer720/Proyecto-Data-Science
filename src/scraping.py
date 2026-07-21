@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pandas as pd
@@ -100,11 +101,18 @@ def descargar_departamento(
     return tablas[0]
 
 
-def unir_csvs(lista_paths: list[str | Path]) -> pd.DataFrame:
+# Une archivos crudos que comparten el mismo esquema sin modificar sus valores.
+# Las filas vacías se conservan por defecto para reproducir fielmente la fuente;
+# su eliminación corresponde a la etapa posterior de limpieza.
+def unir_csvs(
+    lista_paths: list[str | Path],
+    *,
+    eliminar_filas_totalmente_vacias: bool = False,
+) -> pd.DataFrame:
     if not lista_paths:
         raise ValueError("lista_paths no puede estar vacía")
 
-    dfs = [pd.read_csv(p, dtype=str) for p in lista_paths]
+    dfs = [pd.read_csv(p, dtype="string", keep_default_na=False) for p in lista_paths]
 
     columnas_base = list(dfs[0].columns)
     for path, df in zip(lista_paths, dfs):
@@ -112,5 +120,46 @@ def unir_csvs(lista_paths: list[str | Path]) -> pd.DataFrame:
             raise ValueError(f"{path} tiene columnas distintas a las del primer archivo: {list(df.columns)}")
 
     unido = pd.concat(dfs, ignore_index=True)
-    unido = unido.dropna(how="all")
+    if eliminar_filas_totalmente_vacias:
+        unido = unido.dropna(how="all")
     return unido.reset_index(drop=True)
+
+
+def sha256_archivo(path: str | Path) -> str:
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as archivo:
+        for bloque in iter(lambda: archivo.read(1024 * 1024), b""):
+            digest.update(bloque)
+    return digest.hexdigest()
+
+
+# Registra la cobertura, fecha y huella SHA-256 del CSV crudo consolidado.
+def crear_manifiesto_consolidado(
+    path_csv: str | Path,
+    fecha_extraccion: str,
+) -> pd.DataFrame:
+    path = Path(path_csv)
+    df = pd.read_csv(path, dtype="string")
+    huella = sha256_archivo(path)
+    conteos = (
+        df.dropna(subset=["DEPARTAMENTO"])
+        .groupby("DEPARTAMENTO", dropna=False)
+        .size()
+        .rename("registros")
+        .reset_index()
+        .rename(columns={"DEPARTAMENTO": "consulta_departamento"})
+    )
+    conteos["nivel"] = "DIVERSIFICADO"
+    conteos["fecha_extraccion"] = fecha_extraccion
+    conteos["archivo_consolidado"] = path.name
+    conteos["sha256_consolidado"] = huella
+    return conteos[
+        [
+            "consulta_departamento",
+            "nivel",
+            "registros",
+            "fecha_extraccion",
+            "archivo_consolidado",
+            "sha256_consolidado",
+        ]
+    ]
