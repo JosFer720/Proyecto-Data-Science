@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+import unicodedata
+
+
+FUENTE_CATALOGO_MUNICIPIOS = (
+    "Instituto Nacional de Estadística (INE), división administrativa de Guatemala: "
+    "22 departamentos y 340 municipios. "
+    "https://www.ine.gob.gt/ine/wp-content/uploads/2020/08/"
+    "02-Metodologia-Departamental-y-Municipal.pdf"
+)
+
 MUNICIPIOS_POR_DEPARTAMENTO: dict[str, list[str]] = {
     "GUATEMALA": [
         "GUATEMALA", "SANTA CATARINA PINULA", "SAN JOSE PINULA", "SAN JOSE DEL GOLFO",
@@ -27,7 +37,7 @@ MUNICIPIOS_POR_DEPARTAMENTO: dict[str, list[str]] = {
     "ESCUINTLA": [
         "ESCUINTLA", "SANTA LUCIA COTZUMALGUAPA", "LA DEMOCRACIA", "SIQUINALA", "MASAGUA",
         "TIQUISATE", "LA GOMERA", "GUANAGAZAPA", "SAN JOSE", "IZTAPA", "PALIN",
-        "SAN VICENTE PACAYA", "NUEVA CONCEPCION",
+        "SAN VICENTE PACAYA", "NUEVA CONCEPCION", "SIPACATE",
     ],
     "SANTA ROSA": [
         "CUILAPA", "BARBERENA", "SANTA ROSA DE LIMA", "CASILLAS", "SAN RAFAEL LAS FLORES",
@@ -83,7 +93,8 @@ MUNICIPIOS_POR_DEPARTAMENTO: dict[str, list[str]] = {
         "SAN JUAN IXCOY", "SAN ANTONIO HUISTA", "SAN SEBASTIAN COATAN",
         "SANTA CRUZ BARILLAS", "AGUACATAN", "SAN RAFAEL LA INDEPENDENCIA",
         "LA DEMOCRACIA", "SAN MIGUEL ACATAN", "SAN RAFAEL PETZAL", "SAN GASPAR IXCHIL",
-        "SANTIAGO CHIMALTENANGO", "SANTA ANA HUISTA", "UNION CANTINIL",
+        "SANTIAGO CHIMALTENANGO", "SANTA ANA HUISTA", "UNION CANTINIL", "SANTA BARBARA",
+        "LA LIBERTAD", "PETATAN",
     ],
     "QUICHE": [
         "SANTA CRUZ DEL QUICHE", "CHICHE", "CHINIQUE", "ZACUALPA", "CHAJUL",
@@ -132,8 +143,20 @@ MUNICIPIOS_POR_DEPARTAMENTO: dict[str, list[str]] = {
 
 DEPARTAMENTOS_OFICIALES = sorted(MUNICIPIOS_POR_DEPARTAMENTO.keys())
 
+
+# Estandariza un nombre geográfico para compararlo con los catálogos oficiales.
+def normalizar_nombre_geografico(nombre: str) -> str:
+    if not isinstance(nombre, str):
+        return ""
+    sin_tildes = "".join(
+        caracter
+        for caracter in unicodedata.normalize("NFKD", nombre)
+        if not unicodedata.combining(caracter)
+    )
+    return " ".join(sin_tildes.upper().strip().split())
+
 _TODOS_LOS_MUNICIPIOS = {
-    (depto, mun)
+    (normalizar_nombre_geografico(depto), normalizar_nombre_geografico(mun))
     for depto, municipios in MUNICIPIOS_POR_DEPARTAMENTO.items()
     for mun in municipios
 }
@@ -142,10 +165,19 @@ _TODOS_LOS_MUNICIPIOS = {
 def es_departamento_valido(nombre: str) -> bool:
     if not isinstance(nombre, str):
         return False
-    return nombre.strip().upper() in DEPARTAMENTOS_OFICIALES
+    return normalizar_nombre_geografico(nombre) in {
+        normalizar_nombre_geografico(departamento) for departamento in DEPARTAMENTOS_OFICIALES
+    }
 
 
 def es_municipio_valido(nombre_municipio: str, nombre_departamento: str) -> bool:
     if not isinstance(nombre_municipio, str) or not isinstance(nombre_departamento, str):
         return False
-    return (nombre_departamento.strip().upper(), nombre_municipio.strip().upper()) in _TODOS_LOS_MUNICIPIOS
+    return (
+        normalizar_nombre_geografico(nombre_departamento),
+        normalizar_nombre_geografico(nombre_municipio),
+    ) in _TODOS_LOS_MUNICIPIOS
+
+
+if sum(len(municipios) for municipios in MUNICIPIOS_POR_DEPARTAMENTO.values()) != 340:
+    raise RuntimeError("El catálogo debe contener exactamente los 340 municipios oficiales.")
