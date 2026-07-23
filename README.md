@@ -141,11 +141,4 @@ La suite también comprueba 22 departamentos, catálogo 22/340, unicidad de `COD
 - El hash de referencia `0364f39e…` no coincide con el candidato presente. La huella recalculada del candidato es `a337c876…`; el hash final indicado arriba corresponde a los bytes realmente entregados después del ordenamiento determinista.
 - La extracción histórica exacta no puede repetirse contra una fuente viva; el CSV crudo, manifiesto, fecha y hash fijan la entrada. Desde esa entrada, el flujo sí es reproducible.
 
-## Trazabilidad y contribuciones
 
-- **Persona A — JosFer720:** estructura, entorno, obtención, diagnóstico inicial y metadatos; evidencia: commits `1a626aa`, `f6df659`, `faaa03c`, `8053846`.
-- **Persona B — Joel Jaquez:** planificación, pipeline, candidato, transformaciones, duplicados y automatización inicial de notebooks; evidencia: commits `dfdf0e2` a `99b8711`.
-- **Persona C — Jose Galindo (Home):** correcciones residuales, pruebas automáticas e informe Antes/Después; evidencia: commits `51c1dd2`, `dfad986`, `05c0333`.
-- **Persona D:** esquema/exportador final, pruebas de entrega, codebook final y PDF, notebook `06`, CSV `v1.0.0` y este README. Este trabajo aún no tiene un commit que permita atribuir honestamente un nombre personal.
-
-Las reglas previas están en `03_plan_limpieza.md`, las transformaciones en `data/processed/transformaciones.csv`, las decisiones manuales en `data/processed/duplicados_revisados.csv`, las métricas en `informe_calidad.md` y los dominios de todas las variables en `codebook.md`.
