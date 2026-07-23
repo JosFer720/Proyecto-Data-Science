@@ -2,7 +2,7 @@
 
 ## Comparación Antes/Después
 
-La columna Después corresponde al conjunto limpio candidato `v0.1.0-candidato`. Las cifras se calculan mediante el mismo código utilizado en los notebooks; deberán confirmarse nuevamente durante la validación independiente y la exportación final.
+La columna Después corresponde al conjunto limpio candidato `v0.1.0-candidato`. Las cifras están confirmadas mediante `src/metricas_calidad.py` y se reproducen de principio a fin en `notebooks/05_validacion.ipynb`.
 
 | Métrica | Antes | Después (candidato) |
 |---|---|---|
@@ -29,7 +29,7 @@ La variable adicional evita una pérdida de información. En el crudo, `CIUDAD C
 
 ### Valores faltantes
 
-El conteo inicial anterior de 4,219 celdas subestimaba las ausencias porque ignoraba puntos, `SIN DATO` y numerosas cadenas de signos. La corrección final del checkpoint B → C amplió el criterio a cualquier cadena sin caracteres alfanuméricos; el conteo corregido es 4,645. El porcentaje bruto posterior aumenta por dos razones legítimas:
+El conteo preliminar de 4,219 celdas subestimaba las ausencias porque ignoraba puntos, `SIN DATO` y numerosas cadenas de signos. La revisión reproducible amplió el criterio a cualquier cadena sin caracteres alfanuméricos; el conteo confirmado es 4,645. El porcentaje bruto posterior aumenta por dos razones legítimas:
 
 1. Se hacen explícitos como `NA` teléfonos y distritos incompletos que antes parecían texto válido.
 2. `ZONA_CAPITAL` solo aplica a 2,161 registros y por diseño es `NA` en los otros 9,707.
@@ -38,7 +38,7 @@ Al comparar únicamente las 17 variables originales después de retirar las fila
 
 ### Duplicados
 
-Las 22 repeticiones exactas desaparecen al quitar las filas estructurales. Para duplicados parciales se usa el mismo algoritmo antes y después: bloqueo geográfico, alta similitud de nombre, dirección o teléfono y coincidencia de los atributos que definen la unidad registral. La normalización descubre 12 pares adicionales. Todos quedan conservados y documentados porque un código oficial diferente no debe fusionarse sin confirmación de MINEDUC.
+Las 22 repeticiones exactas desaparecen al quitar las filas estructurales. Para duplicados parciales se usa el mismo algoritmo antes y después: bloqueo geográfico, alta similitud de nombre, dirección o teléfono y coincidencia de los atributos que definen la unidad registral. La normalización descubre 12 pares adicionales. De los 781 pares candidatos, 781 quedaron conservados y 0 corregidos, fusionados o eliminados, porque un código oficial diferente no debe fusionarse sin confirmación de MINEDUC.
 
 ### Formatos, dominios y categorías
 
@@ -46,10 +46,15 @@ Los teléfonos admiten uno o más números completos de ocho dígitos separados 
 
 Las 13 categorías de `PLAN` no se fusionaron: `SEMIPRESENCIAL`, `SEMIPRESENCIAL (FIN DE SEMANA)` y las frecuencias de uno o dos días representan modalidades distintas.
 
+### Errores corregidos
+
+Las correcciones se presentan por tipo de transformación y no como una suma total. Una misma fila o celda puede participar en varias normalizaciones, por lo que agregarlas produciría doble conteo. Los valores se obtienen del registro de transformaciones y se comprueban contra el candidato.
+
 ## Trazabilidad
 
 - Reglas previas: `03_plan_limpieza.md`.
-- Código reutilizable: `src/diagnostico.py`, `src/catalogos.py`, `src/limpieza_texto.py`, `src/duplicados.py`, `src/validadores.py` y `src/pipeline_limpieza.py`.
+- Código reutilizable: `src/diagnostico.py`, `src/catalogos.py`, `src/limpieza_texto.py`, `src/duplicados.py`, `src/validadores.py`, `src/metricas_calidad.py` y `src/pipeline_limpieza.py`.
+- Reproducción de las siete validaciones y las diez métricas: `notebooks/05_validacion.ipynb`.
 - Transformaciones: `data/processed/transformaciones.csv`.
 - Revisión caso por caso: `data/processed/duplicados_revisados.csv`.
 - Candidato limpio: `data/processed/establecimientos_limpios_candidato.csv`.

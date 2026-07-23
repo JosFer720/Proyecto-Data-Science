@@ -8,6 +8,7 @@ Pipeline reproducible para obtener, diagnosticar y limpiar los registros de esta
 - Plan de limpieza documentado para las 17 variables originales.
 - Limpieza reproducible implementada.
 - Conjunto limpio **candidato** validado automáticamente: 7 de 7 pruebas aprobadas.
+- Informe reproducible Antes/Después completado con 10 métricas confirmadas.
 - Registro de transformaciones y revisión de duplicados parciales generados.
 - Pendiente: versión final del codebook, PDF y exportación del único CSV final.
 
@@ -39,12 +40,14 @@ notebooks/
 ├── 04_limpieza.ipynb
 └── 05_validacion.ipynb
 tests/
+├── test_metricas_calidad.py
 └── test_validacion.py
 src/
 ├── catalogos.py
 ├── diagnostico.py
 ├── duplicados.py
 ├── limpieza_texto.py
+├── metricas_calidad.py
 ├── pipeline_limpieza.py
 ├── scraping.py
 └── validadores.py
@@ -76,7 +79,7 @@ Ejecutar desde la raíz del repositorio:
 .venv/bin/python -m jupyter nbconvert --execute --to notebook --inplace notebooks/05_validacion.ipynb
 ```
 
-El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo reproduce el diagnóstico. El tercero regenera el candidato limpio y los dos archivos de trazabilidad. Finalmente, `pytest` comprueba que cada regla detecte errores deliberados y el notebook `05` presenta el resultado de las siete validaciones sobre el candidato.
+El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo reproduce el diagnóstico. El tercero regenera el candidato limpio y los dos archivos de trazabilidad. Finalmente, `pytest` comprueba las reglas y métricas con escenarios controlados; el notebook `05` presenta las siete validaciones y reproduce la comparación Antes/Después.
 
 ## Decisiones importantes
 
@@ -95,8 +98,8 @@ El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo rep
 - `transformaciones.csv`: resumen cuantitativo de cada transformación.
 - `duplicados_revisados.csv`: revisión de cada par candidato.
 - `tests/test_validacion.py`: pruebas positivas y escenarios alterados para las siete reglas.
-- `05_validacion.ipynb`: resumen aprobado/fallido, cantidades y ejemplos de validación.
+- `05_validacion.ipynb`: siete validaciones y tabla reproducible de las diez métricas Antes/Después.
 - `codebook.md`: definición, dominio y tratamiento de cada variable.
-- `informe_calidad.md`: comparación cuantitativa Antes/Después.
+- `informe_calidad.md`: comparación cuantitativa Antes/Después respaldada por código.
 
 

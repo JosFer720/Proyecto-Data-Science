@@ -447,6 +447,11 @@ Este notebook ejecuta las siete comprobaciones de calidad exigidas sobre el CSV 
             + "\n    ejecutar_validaciones,"
             + "\n    resumen_validaciones,"
             + "\n)"
+            + "\nfrom src.metricas_calidad import ("
+            + "\n    calcular_comparacion_calidad,"
+            + "\n    resumen_decisiones_duplicados,"
+            + "\n    tabla_comparativa,"
+            + "\n)"
         ),
         codigo(
             """
@@ -509,11 +514,89 @@ pd.DataFrame(
 )
 """
         ),
+        markdown("## Informe reproducible de calidad Antes/Después"),
+        codigo(
+            """
+RUTA_RAW = ROOT / "data" / "raw" / "establecimientos_raw.csv"
+RUTA_TRANSFORMACIONES = ROOT / "data" / "processed" / "transformaciones.csv"
+RUTA_DUPLICADOS = ROOT / "data" / "processed" / "duplicados_revisados.csv"
+
+df_raw = pd.read_csv(RUTA_RAW, dtype="string", keep_default_na=False)
+transformaciones = pd.read_csv(RUTA_TRANSFORMACIONES, dtype="string")
+duplicados_revisados = pd.read_csv(RUTA_DUPLICADOS, dtype="string")
+
+comparacion = calcular_comparacion_calidad(
+    df_raw, df_candidato, transformaciones
+)
+tabla_calidad = tabla_comparativa(comparacion)
+tabla_calidad
+"""
+        ),
+        markdown("### Comparación equivalente de valores faltantes"),
+        codigo(
+            """
+pd.DataFrame(
+    [
+        {
+            "Comparación": "Todas las variables de cada estado",
+            "Antes": f"{comparacion.antes.faltantes:,} / {comparacion.antes.celdas:,} ({comparacion.antes.porcentaje_faltantes:.2f} %)",
+            "Después": f"{comparacion.despues.faltantes:,} / {comparacion.despues.celdas:,} ({comparacion.despues.porcentaje_faltantes:.2f} %)",
+        },
+        {
+            "Comparación": "Solo las 17 variables originales",
+            "Antes": f"{comparacion.antes.faltantes:,} / {comparacion.antes.celdas:,} ({comparacion.antes.porcentaje_faltantes:.2f} %)",
+            "Después": f"{comparacion.faltantes_despues_comparables:,} / {comparacion.celdas_despues_comparables:,} ({comparacion.porcentaje_despues_comparable:.2f} %)",
+        },
+    ]
+)
+"""
+        ),
+        markdown("### Decisiones sobre posibles duplicados"),
+        codigo(
+            """
+decisiones_duplicados = resumen_decisiones_duplicados(duplicados_revisados)
+pd.DataFrame(
+    decisiones_duplicados.items(), columns=["Decisión", "Pares candidatos"]
+)
+"""
+        ),
+        markdown("### Resumen de correcciones"),
+        codigo(
+            """
+pd.DataFrame(
+    comparacion.correcciones.items(),
+    columns=["Tipo de corrección", "Registros afectados"],
+)
+"""
+        ),
+        markdown("### Comprobación reproducible del informe"),
+        codigo(
+            """
+assert tabla_calidad.shape == (10, 3)
+assert (comparacion.antes.registros, comparacion.despues.registros) == (11891, 11868)
+assert (comparacion.antes.faltantes, comparacion.despues.faltantes) == (4645, 14148)
+assert comparacion.faltantes_despues_comparables == 4441
+assert (comparacion.antes.duplicados_exactos, comparacion.despues.duplicados_exactos) == (22, 0)
+assert (
+    comparacion.antes.posibles_duplicados_pares,
+    comparacion.despues.posibles_duplicados_pares,
+) == (769, 781)
+assert decisiones_duplicados == {
+    "conservados": 781,
+    "corregidos": 0,
+    "fusionados": 0,
+    "eliminados": 0,
+}
+assert all(resultado.aprobada for resultado in resultados)
+
+print("INFORME REPRODUCIDO: 10 métricas Antes/Después confirmadas.")
+"""
+        ),
         markdown(
             """
 ## Resultado
 
-El conjunto candidato supera las siete reglas automáticas y puede avanzar a la comparación formal Antes/Después. Este resultado no renombra ni exporta todavía el CSV final.
+El conjunto candidato supera las siete reglas automáticas y la comparación reproducible confirma las diez métricas Antes/Después. Este resultado no renombra ni exporta todavía el CSV final.
 """
         ),
     ],
