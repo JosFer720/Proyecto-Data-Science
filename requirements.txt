@@ -73,6 +73,7 @@ psutil==7.2.2
 ptyprocess==0.7.0
 pure_eval==0.2.3
 pycparser==3.0
+pypdf==6.14.2
 Pygments==2.20.0
 pytest==9.1.1
 python-dateutil==2.9.0.post0
@@ -82,6 +83,7 @@ pyzmq==27.1.0
 RapidFuzz==3.14.5
 referencing==0.37.0
 requests==2.34.2
+reportlab==5.0.0
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rfc3987-syntax==1.1.0

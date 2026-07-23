@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory() as directorio_temporal:
     rutas_bloques = []
     for numero, bloque in enumerate(bloques, start=1):
         ruta = Path(directorio_temporal) / f"consulta_{numero:02d}.csv"
-        bloque.to_csv(ruta, index=False, lineterminator="\n")
+        bloque.to_csv(ruta, index=False, lineterminator="\\n")
         rutas_bloques.append(ruta)
 
     reconstruido = scraping.unir_csvs(rutas_bloques)
@@ -138,7 +138,7 @@ print("La unión reproduce exactamente las 11,891 filas del CSV crudo.")
         codigo(
             """
 manifiesto = scraping.crear_manifiesto_consolidado(RUTA_RAW, "2026-07-18")
-manifiesto.to_csv(RUTA_MANIFIESTO, index=False, lineterminator="\n")
+manifiesto.to_csv(RUTA_MANIFIESTO, index=False, lineterminator="\\n")
 
 print("SHA-256:", scraping.sha256_archivo(RUTA_RAW))
 print("Registros documentados:", int(manifiesto["registros"].sum()))
@@ -408,9 +408,9 @@ comparacion_faltantes
 RUTA_CANDIDATO.parent.mkdir(parents=True, exist_ok=True)
 RUTA_TRANSFORMACIONES.parent.mkdir(parents=True, exist_ok=True)
 
-df_limpio.to_csv(RUTA_CANDIDATO, index=False, lineterminator="\n")
-transformaciones.to_csv(RUTA_TRANSFORMACIONES, index=False, lineterminator="\n")
-duplicados_revisados.to_csv(RUTA_DUPLICADOS, index=False, lineterminator="\n")
+df_limpio.to_csv(RUTA_CANDIDATO, index=False, lineterminator="\\n")
+transformaciones.to_csv(RUTA_TRANSFORMACIONES, index=False, lineterminator="\\n")
+duplicados_revisados.to_csv(RUTA_DUPLICADOS, index=False, lineterminator="\\n")
 
 print("Candidato:", RUTA_CANDIDATO.relative_to(ROOT))
 print("SHA-256 candidato:", scraping.sha256_archivo(RUTA_CANDIDATO))
@@ -597,6 +597,118 @@ print("INFORME REPRODUCIDO: 10 métricas Antes/Después confirmadas.")
 ## Resultado
 
 El conjunto candidato supera las siete reglas automáticas y la comparación reproducible confirma las diez métricas Antes/Después. Este resultado no renombra ni exporta todavía el CSV final.
+"""
+        ),
+    ],
+)
+
+
+guardar(
+    "06_dataset_final.ipynb",
+    [
+        markdown(
+            """
+# Generación y versionado del dataset final
+
+Este notebook es el checkpoint de Persona D. Carga el candidato, confirma que no hay correcciones adicionales aprobadas, ejecuta las siete validaciones, verifica los invariantes de entrega y exporta de forma determinista el único CSV limpio final, versión `v1.0.0`.
+"""
+        ),
+        markdown("## Configuración, esquema y metadatos"),
+        codigo(
+            SETUP
+            + "\nfrom src import catalogos"
+            + "\nfrom src.finalizacion import ("
+            + "\n    FECHA_EXTRACCION, FUENTE_DATOS, VERSION_DATASET,"
+            + "\n    exportar_dataset_final, validar_codebook, validar_invariantes_finales,"
+            + "\n)"
+            + "\nfrom src.validadores import COLUMNAS_REQUERIDAS, cargar_csv_para_validacion, ejecutar_validaciones, resumen_validaciones"
+        ),
+        codigo(
+            """
+RUTA_CANDIDATO = ROOT / "data" / "processed" / "establecimientos_limpios_candidato.csv"
+RUTA_FINAL = ROOT / "data" / "processed" / "establecimientos_clean.csv"
+RUTA_CODEBOOK = ROOT / "codebook.md"
+
+print("Versión:", VERSION_DATASET)
+print("Fecha de extracción:", FECHA_EXTRACCION)
+print("Fuente:", FUENTE_DATOS)
+"""
+        ),
+        markdown("## Checkpoint y correcciones adicionales"),
+        codigo(
+            """
+correcciones_adicionales = pd.DataFrame(
+    columns=["CODIGO", "VARIABLE", "ANTES", "DESPUES", "JUSTIFICACION"]
+)
+assert correcciones_adicionales.empty
+print("Correcciones adicionales aprobadas en el checkpoint: 0")
+print("El candidato se promueve sin alterar valores; solo se ordena por CODIGO.")
+"""
+        ),
+        markdown("## Siete validaciones previas a la escritura"),
+        codigo(
+            """
+df_candidato = cargar_csv_para_validacion(RUTA_CANDIDATO)
+resultados_previos = ejecutar_validaciones(df_candidato)
+resumen_validaciones(resultados_previos)
+"""
+        ),
+        codigo(
+            """
+fallos_previos = [r for r in resultados_previos if not r.aprobada]
+if fallos_previos:
+    raise RuntimeError({r.prueba: r.ejemplos for r in fallos_previos})
+assert len(resultados_previos) == 7
+print("VALIDACIÓN PREVIA APROBADA: 7 de 7.")
+"""
+        ),
+        markdown("## Consistencia del esquema y del libro de códigos"),
+        codigo(
+            """
+assert list(df_candidato.columns) == COLUMNAS_REQUERIDAS
+assert all(str(tipo) == "string" for tipo in df_candidato.dtypes)
+validar_codebook(RUTA_CODEBOOK, list(df_candidato.columns))
+print("Esquema explícito:", {columna: "string" for columna in COLUMNAS_REQUERIDAS})
+print("Codebook: 18 de 18 variables, nueve campos completos por variable.")
+"""
+        ),
+        markdown("## Exportación determinista y recarga"),
+        codigo(
+            """
+df_final, sha256, resultados_finales = exportar_dataset_final(
+    RUTA_CANDIDATO, RUTA_FINAL
+)
+validar_invariantes_finales(df_final)
+
+assert set(df_final["DEPARTAMENTO"]) == set(catalogos.DEPARTAMENTOS_OFICIALES)
+assert not df_final.isna().all(axis=1).any()
+assert not df_final.duplicated().any()
+assert df_final["CODIGO"].is_unique
+assert list(df_final.columns) == COLUMNAS_REQUERIDAS
+print("Salida:", RUTA_FINAL.relative_to(ROOT))
+print("Dimensión:", df_final.shape)
+print("Cobertura departamental:", df_final["DEPARTAMENTO"].nunique())
+print("SHA-256:", sha256)
+"""
+        ),
+        markdown("## Resultado final"),
+        codigo(
+            """
+resumen_final = resumen_validaciones(resultados_finales)
+display(resumen_final)
+if len(resultados_finales) != 7 or not all(r.aprobada for r in resultados_finales):
+    raise RuntimeError("VALIDACIÓN FINAL FALLIDA: no se entrega el CSV.")
+
+print("APROBADO — dataset final v1.0.0")
+print("7 de 7 validaciones aprobadas; 11,868 filas; 18 columnas; 22 departamentos.")
+print("Hash SHA-256 reproducible:", sha256)
+"""
+        ),
+        markdown(
+            """
+## Contrato de escritura
+
+El CSV se escribe en UTF-8, sin índice, con salto de línea `LF`, faltantes como campos vacíos, columnas en el orden del esquema y filas ordenadas establemente por `CODIGO`. Todos los campos se recargan mediante el esquema `string`; el CSV por sí mismo no conserva tipos.
 """
         ),
     ],

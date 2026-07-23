@@ -1,5 +1,6 @@
 /Instrucciones
 .venv/
+.DS_Store
+*.py[cod]
 __pycache__/
 .ipynb_checkpoints/
-

@@ -2,9 +2,9 @@
 
 ## Comparación Antes/Después
 
-La columna Después corresponde al conjunto limpio candidato `v0.1.0-candidato`. Las cifras están confirmadas mediante `src/metricas_calidad.py` y se reproducen de principio a fin en `notebooks/05_validacion.ipynb`.
+La columna Después corresponde al conjunto limpio final `v1.0.0`. Sus valores coinciden con el candidato validado porque el checkpoint final no aprobó correcciones de contenido; únicamente fijó el orden por `CODIGO`. Las cifras están confirmadas mediante `src/metricas_calidad.py` y se reproducen en `notebooks/05_validacion.ipynb` y `notebooks/06_dataset_final.ipynb`.
 
-| Métrica | Antes | Después (candidato) |
+| Métrica | Antes | Después (`v1.0.0`) |
 |---|---|---|
 | Registros | 11,891 filas, incluidas 23 filas completamente vacías. | 11,868 filas; se eliminaron únicamente las 23 filas estructurales vacías. |
 | Variables | 17 variables. | 18 variables; se agregó `ZONA_CAPITAL` para no perder la zona al normalizar Ciudad Capital. |
@@ -58,3 +58,4 @@ Las correcciones se presentan por tipo de transformación y no como una suma tot
 - Transformaciones: `data/processed/transformaciones.csv`.
 - Revisión caso por caso: `data/processed/duplicados_revisados.csv`.
 - Candidato limpio: `data/processed/establecimientos_limpios_candidato.csv`.
+- Dataset final validado: `data/processed/establecimientos_clean.csv` (11,868 × 18; SHA-256 `429468cb07a6e31aeb2a1d27611b0d82952a5c909f2b6a454fc03b12a1ec5b49`).
