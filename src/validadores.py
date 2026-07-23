@@ -13,6 +13,7 @@ COLUMNAS_REQUERIDAS = [
     "DISTRITO",
     "DEPARTAMENTO",
     "MUNICIPIO",
+    "ZONA_CAPITAL",
     "ESTABLECIMIENTO",
     "DIRECCION",
     "TELEFONO",
@@ -27,6 +28,8 @@ COLUMNAS_REQUERIDAS = [
     "PLAN",
     "DEPARTAMENTAL",
 ]
+
+COLUMNAS_TEXTO_LIBRE = ["ESTABLECIMIENTO", "DIRECCION", "SUPERVISOR", "DIRECTOR"]
 
 
 def es_codigo_valido(valor: object) -> bool:
@@ -51,6 +54,15 @@ def tiene_espacios_extra(valor: object) -> bool:
     return texto != texto.strip() or bool(re.search(r"\s{2,}", texto))
 
 
+def es_texto_residual_invalido(valor: object) -> bool:
+    if pd.isna(valor):
+        return False
+    texto = str(valor).strip()
+    return bool(re.fullmatch(r"[\W_]+", texto)) or bool(
+        re.match(r"^-{2,}\s*\w", texto)
+    )
+
+
 def es_departamental_consistente(departamento: object, departamental: object) -> bool:
     if pd.isna(departamento) or pd.isna(departamental):
         return True
@@ -64,9 +76,15 @@ def contar_errores_calidad(df: pd.DataFrame) -> dict[str, int]:
     errores_espacios = sum(
         int(df[columna].map(tiene_espacios_extra).sum()) for columna in columnas_texto
     )
+    errores_texto_residual = sum(
+        int(df[columna].map(es_texto_residual_invalido).sum())
+        for columna in COLUMNAS_TEXTO_LIBRE
+        if columna in df
+    )
     return {
         "duplicados_exactos": int(df.duplicated().sum()),
         "espacios_extra": errores_espacios,
+        "textos_residuales_invalidos": errores_texto_residual,
         "telefonos_invalidos": int((~df["TELEFONO"].map(es_telefono_valido)).sum()),
         "codigos_invalidos": int((~df["CODIGO"].map(es_codigo_valido)).sum()),
         "distritos_invalidos": int((~df["DISTRITO"].map(es_distrito_valido)).sum()),

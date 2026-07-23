@@ -4,7 +4,7 @@ Este documento se definió antes de generar el conjunto limpio candidato. Incluy
 
 ## Principios generales
 
-- Los marcadores vacíos (`""`, `N/A`, `NULL`, guiones, puntos, `SIN DATO` y equivalentes) se convierten a un único valor faltante `NA`.
+- Los marcadores vacíos (`""`, `N/A`, `NULL`, guiones, puntos, `SIN DATO` y equivalentes) se convierten a un único valor faltante `NA`. Una cadena sin caracteres alfanuméricos también se considera ausencia, aunque combine signos y espacios.
 - Los códigos y teléfonos se mantienen como texto para conservar ceros iniciales.
 - Los textos se normalizan con Unicode NFKC, eliminación de caracteres invisibles, espacios extremos/múltiples y mayúsculas.
 - Las tildes se conservan en nombres y direcciones. En categorías y geografía se comparan sin tildes para evitar falsos valores distintos.
@@ -24,7 +24,7 @@ Este documento se definió antes de generar el conjunto limpio candidato. Incluy
 | `DIRECCION` | Faltantes, puntos usados como ausencia y formato libre. | Convertir centinelas a `NA`; normalizar Unicode, espacios y mayúsculas; no dividir ni geocodificar. | Produce representación consistente sin inventar componentes de dirección. | Direcciones equivalentes pueden seguir redactadas distinto; se evalúan mediante similitud. |
 | `TELEFONO` | Faltantes, longitudes de 2–30 caracteres, teléfonos múltiples, letras y números incompletos. | Extraer únicamente secuencias completas de 8 dígitos que inicien entre 2 y 7; eliminar repetidos y separar múltiples teléfonos con ` / `; si no hay ninguno completo, usar `NA`. | Cumple el formato telefónico esperado y evita inferir dígitos. | Puede descartarse un teléfono histórico de 7 dígitos; se documenta como inválido en vez de completarlo arbitrariamente. |
 | `SUPERVISOR` | Faltantes y variantes por tildes; texto libre. | Convertir centinelas a `NA`; normalizar Unicode, espacios y mayúsculas; conservar tildes. | Uniforma formato sin afirmar que dos nombres parecidos son la misma persona. | Permanecen variantes ortográficas legítimas; no se fusionan automáticamente. |
-| `DIRECTOR` | Mayor cantidad de faltantes; además usa series de guiones, punto y `SIN DATO`. | Convertir todos los centinelas y cadenas compuestas solo por guiones a `NA`; normalizar el resto. | Corrige la subestimación de faltantes y deja una representación única. | No se imputan responsables por similitud entre establecimientos. |
+| `DIRECTOR` | Mayor cantidad de faltantes; además usa series de guiones, puntuación aislada y `SIN DATO`; un nombre contiene guiones decorativos iniciales. | Convertir centinelas y cadenas sin caracteres alfanuméricos a `NA`; retirar series de guiones antepuestas a un nombre y normalizar el resto. | Corrige la subestimación de faltantes y la puntuación innecesaria sin alterar el contenido del nombre. | No se imputan responsables ni se eliminan guiones internos legítimos. |
 | `NIVEL` | Un único valor real esperado; los faltantes pertenecen a filas vacías. | Eliminar filas vacías, normalizar y validar que todos los registros sean `DIVERSIFICADO`. | Confirma el filtro solicitado por el proyecto. | Ninguno relevante; cualquier otro valor debe detener la validación. |
 | `SECTOR` | Cuatro categorías válidas y faltantes estructurales. | Normalizar escritura y validar `OFICIAL`, `PRIVADO`, `COOPERATIVA`, `MUNICIPAL`. | Es un dominio estable y cerrado. | Una categoría nueva de la fuente requeriría actualizar el dominio, no descartarla silenciosamente. |
 | `AREA` | Incluye `SIN ESPECIFICAR` en tres registros. | Conservar `URBANA`, `RURAL` y `SIN ESPECIFICAR`; normalizar escritura. | `SIN ESPECIFICAR` es una categoría informativa, no un faltante automático. | Tratarla como NA perdería la declaración explícita de la fuente. |
@@ -45,5 +45,5 @@ Este documento se definió antes de generar el conjunto limpio candidato. Incluy
 - Los duplicados exactos se calculan sobre todas las columnas. Las 23 filas vacías se eliminan porque son separadores, no establecimientos.
 - Los candidatos parciales se bloquean por departamento, municipio y prefijo del nombre, y también por teléfono dentro del mismo municipio.
 - Se exige alta similitud del nombre y coincidencia de dirección o teléfono, además de la misma unidad registral (`NIVEL`, `SECTOR`, `AREA`, `STATUS`, `MODALIDAD`, `JORNADA`, `PLAN` y `DEPARTAMENTAL`).
-- Cada candidato se documenta en `data/processed/duplicados_revisados.csv`.
+- Cada candidato se documenta en `data/processed/duplicados_revisados.csv` con nivel de coincidencia, evidencia específica, decisión y justificación individual.
 - Un código MINEDUC distinto se conserva como unidad registral distinta salvo confirmación expresa de la fuente que autorice fusionar o eliminar.

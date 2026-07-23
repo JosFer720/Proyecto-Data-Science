@@ -19,7 +19,9 @@ def es_valor_faltante(valor: object) -> bool:
     if valor is None or pd.isna(valor):
         return True
     texto = normalizar_texto(valor, mayusculas=True, quitar_tildes=False)
-    return texto in SENTINELAS_FALTANTES or bool(re.fullmatch(r"-+", texto))
+    return texto in SENTINELAS_FALTANTES or not any(
+        caracter.isalnum() for caracter in texto
+    )
 
 
 # Normaliza Unicode, espacios, mayúsculas y tildes según la configuración.
@@ -45,6 +47,14 @@ def limpiar_valor_texto(valor: object, *, quitar_tildes: bool = False) -> object
     if es_valor_faltante(valor):
         return pd.NA
     texto = normalizar_texto(valor, quitar_tildes=quitar_tildes)
+    return texto if texto else pd.NA
+
+
+def limpiar_prefijo_decorativo(valor: object) -> object:
+    limpio = limpiar_valor_texto(valor)
+    if pd.isna(limpio):
+        return pd.NA
+    texto = re.sub(r"^-{2,}\s*(?=\w)", "", str(limpio))
     return texto if texto else pd.NA
 
 

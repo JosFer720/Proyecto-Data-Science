@@ -11,6 +11,7 @@ from src.limpieza_texto import (
     limpiar_codigo,
     limpiar_columnas_texto,
     limpiar_distrito,
+    limpiar_prefijo_decorativo,
     limpiar_telefono,
     limpiar_valor_texto,
 )
@@ -168,6 +169,17 @@ def limpiar_establecimientos(df_raw: pd.DataFrame) -> ResultadoLimpieza:
 
     # 4. Categorías y texto libre. Las modalidades de PLAN no se fusionan.
     df = limpiar_columnas_texto(df, COLUMNAS_TEXTO_LIBRE, quitar_tildes=False)
+    antes = df["DIRECTOR"].copy()
+    df["DIRECTOR"] = df["DIRECTOR"].map(limpiar_prefijo_decorativo).astype("string")
+    cambios = _cantidad_cambios(antes, df["DIRECTOR"])
+    if cambios:
+        registrar(
+            "DIRECTOR",
+            "Puntuación decorativa antepuesta al nombre",
+            "Eliminar series de guiones al inicio cuando van seguidas de un nombre",
+            cambios,
+            "Corrige puntuación innecesaria sin modificar guiones internos del nombre.",
+        )
     for columna in COLUMNAS_CATEGORICAS:
         antes = df[columna].copy()
         df[columna] = df[columna].map(

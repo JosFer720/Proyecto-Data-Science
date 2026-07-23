@@ -110,11 +110,31 @@ def encontrar_duplicados_parciales(
             for columna in columnas_comparadas
             if not _valores_iguales(fila_i[columna], fila_j[columna])
         ]
+        campos_texto = ", ".join(campos_diferentes) or "NINGUNO"
+        coincidencias = []
+        if nombre == 100:
+            coincidencias.append("nombre exacto")
+        else:
+            coincidencias.append(f"nombre {nombre:.2f}")
+        if direccion == 100:
+            coincidencias.append("dirección exacta")
+        else:
+            coincidencias.append(f"dirección {direccion:.2f}")
+        coincidencias.append(
+            "teléfono igual" if mismo_telefono else "teléfono diferente o faltante"
+        )
+        nivel_coincidencia = (
+            "MUY ALTA"
+            if nombre == 100 and direccion == 100 and mismo_telefono
+            else "ALTA"
+        )
         decision = "CONSERVAR"
         justificacion = (
-            "Los códigos MINEDUC son distintos y funcionan como identificadores oficiales; "
-            "se conservan como unidades registrales separadas. La similitud quedó revisada, "
-            "pero no justifica una fusión sin confirmación expresa de la fuente."
+            f"Par {fila_i['CODIGO']} / {fila_j['CODIGO']}: "
+            f"{'; '.join(coincidencias)}; campos diferentes: {campos_texto}. "
+            "Los dos códigos MINEDUC son distintos y funcionan como identificadores "
+            "oficiales; se conservan por separado porque no existe confirmación de la "
+            "fuente que autorice fusionar o eliminar uno."
         )
         resultados.append(
             {
@@ -131,7 +151,8 @@ def encontrar_duplicados_parciales(
                 "similitud_nombre": round(float(nombre), 2),
                 "similitud_direccion": round(float(direccion), 2),
                 "telefono_igual": mismo_telefono,
-                "campos_diferentes": ", ".join(campos_diferentes) or "NINGUNO",
+                "campos_diferentes": campos_texto,
+                "nivel_coincidencia": nivel_coincidencia,
                 "decision": decision,
                 "justificacion": justificacion,
             }
@@ -152,6 +173,7 @@ def encontrar_duplicados_parciales(
         "similitud_direccion",
         "telefono_igual",
         "campos_diferentes",
+        "nivel_coincidencia",
         "decision",
         "justificacion",
     ]

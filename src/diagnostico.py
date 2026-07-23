@@ -59,8 +59,8 @@ def _normalizar_para_comparar(valor: object) -> str:
 # Identifica NA, vacíos y centinelas que representan datos ausentes.
 def mascara_faltantes(serie: pd.Series) -> pd.Series:
     normalizada = serie.map(_normalizar_para_comparar)
-    solo_guiones = normalizada.str.fullmatch(r"-+", na=False)
-    return serie.isna() | normalizada.isin(SENTINELAS_FALTANTES) | solo_guiones
+    solo_puntuacion = normalizada.str.fullmatch(r"[\W_]+", na=False)
+    return serie.isna() | normalizada.isin(SENTINELAS_FALTANTES) | solo_puntuacion
 
 
 def resumen_faltantes(df: pd.DataFrame) -> pd.DataFrame:

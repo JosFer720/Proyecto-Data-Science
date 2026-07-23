@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory() as directorio_temporal:
     rutas_bloques = []
     for numero, bloque in enumerate(bloques, start=1):
         ruta = Path(directorio_temporal) / f"consulta_{numero:02d}.csv"
-        bloque.to_csv(ruta, index=False)
+        bloque.to_csv(ruta, index=False, lineterminator="\n")
         rutas_bloques.append(ruta)
 
     reconstruido = scraping.unir_csvs(rutas_bloques)
@@ -138,7 +138,7 @@ print("La unión reproduce exactamente las 11,891 filas del CSV crudo.")
         codigo(
             """
 manifiesto = scraping.crear_manifiesto_consolidado(RUTA_RAW, "2026-07-18")
-manifiesto.to_csv(RUTA_MANIFIESTO, index=False)
+manifiesto.to_csv(RUTA_MANIFIESTO, index=False, lineterminator="\n")
 
 print("SHA-256:", scraping.sha256_archivo(RUTA_RAW))
 print("Registros documentados:", int(manifiesto["registros"].sum()))
@@ -408,9 +408,9 @@ comparacion_faltantes
 RUTA_CANDIDATO.parent.mkdir(parents=True, exist_ok=True)
 RUTA_TRANSFORMACIONES.parent.mkdir(parents=True, exist_ok=True)
 
-df_limpio.to_csv(RUTA_CANDIDATO, index=False)
-transformaciones.to_csv(RUTA_TRANSFORMACIONES, index=False)
-duplicados_revisados.to_csv(RUTA_DUPLICADOS, index=False)
+df_limpio.to_csv(RUTA_CANDIDATO, index=False, lineterminator="\n")
+transformaciones.to_csv(RUTA_TRANSFORMACIONES, index=False, lineterminator="\n")
+duplicados_revisados.to_csv(RUTA_DUPLICADOS, index=False, lineterminator="\n")
 
 print("Candidato:", RUTA_CANDIDATO.relative_to(ROOT))
 print("SHA-256 candidato:", scraping.sha256_archivo(RUTA_CANDIDATO))

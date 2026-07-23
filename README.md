@@ -82,6 +82,7 @@ El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo rep
 - El catálogo contiene los 340 municipios oficiales.
 - Las modalidades semipresenciales de `PLAN` no se fusionan porque describen frecuencias diferentes.
 - Los posibles duplicados no se eliminan automáticamente. Cada par conserva decisión y justificación en `duplicados_revisados.csv`.
+- Las cadenas formadas únicamente por puntuación se representan como `NA`; la validación impide que reaparezcan en los textos libres.
 
 ## Trazabilidad
 

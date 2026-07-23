@@ -8,14 +8,14 @@ La columna Después corresponde al conjunto limpio candidato `v0.1.0-candidato`.
 |---|---|---|
 | Registros | 11,891 filas, incluidas 23 filas completamente vacías. | 11,868 filas; se eliminaron únicamente las 23 filas estructurales vacías. |
 | Variables | 17 variables. | 18 variables; se agregó `ZONA_CAPITAL` para no perder la zona al normalizar Ciudad Capital. |
-| Valores faltantes (# y %) | 4,636 de 202,147 celdas (2.29 %), incluyendo vacíos, puntos, `SIN DATO` y cadenas formadas solo por guiones. | 14,139 de 213,624 celdas (6.62 %). La variable derivada aporta 9,707 NA estructurales; excluyéndola son 4,432 de 201,756 celdas (2.20 %). |
+| Valores faltantes (# y %) | 4,645 de 202,147 celdas (2.30 %), incluyendo vacíos, `SIN DATO` y cadenas formadas únicamente por signos o espacios. | 14,148 de 213,624 celdas (6.62 %). La variable derivada aporta 9,707 NA estructurales; excluyéndola son 4,441 de 201,756 celdas (2.20 %). |
 | Variables con NA | 17, porque las 23 filas vacías afectan todas las columnas. Excluyendo esas filas, 6 variables contienen faltantes reales. | 7: `DISTRITO`, `ZONA_CAPITAL`, `ESTABLECIMIENTO`, `DIRECCION`, `TELEFONO`, `SUPERVISOR` y `DIRECTOR`. |
 | Duplicados exactos | 22 repeticiones contadas por pandas; corresponden a 23 filas vacías idénticas. No hay duplicados exactos entre las filas con código. | 0. |
 | Posibles duplicados | 769 pares candidatos que afectan 1,372 registros, usando bloqueo, similitud de nombre y coincidencia de dirección/teléfono. | 781 pares que afectan 1,386 registros. Los 781 se conservaron porque sus códigos MINEDUC son distintos; cada decisión está documentada. El aumento se debe a la normalización que permite detectar 12 pares adicionales. |
 | Variables con formato inconsistente | 5: `DISTRITO`, `DIRECCION`, `TELEFONO`, `DIRECTOR` y `DEPARTAMENTAL`. | 0 según las reglas implementadas para espacios, identificadores, teléfonos y relación administrativa. |
 | Variables con tipo incorrecto | 0. Las 17 variables son identificadores, categorías o texto y deben leerse como `string`, no como números. | 0. Las 18 variables se exportan como texto; los códigos y teléfonos conservan ceros iniciales. |
 | Categorías inconsistentes | 16 variantes explícitas que requerían equivalencia: `CIUDAD CAPITAL` y 15 nombres municipales históricos, extendidos o erróneos. Las zonas capitalinas estaban además colocadas en `MUNICIPIO`. | 0 variantes conocidas sin resolver. Los municipios pasan el catálogo de 340 municipios y las modalidades semipresenciales se conservan separadas porque no son equivalentes. |
-| Errores corregidos | 0; es el estado previo a las transformaciones. | Resumen: 23 filas vacías eliminadas; 70 distritos incompletos convertidos a NA; 258 teléfonos reformateados o invalidados; 2,161 departamentos y 2,339 municipios normalizados; 2,161 zonas preservadas; 505 valores de `PLAN` y 2,026 de `DEPARTAMENTAL` normalizados. |
+| Errores corregidos | 0; es el estado previo a las transformaciones. | Resumen: 23 filas vacías eliminadas; 70 distritos incompletos convertidos a NA; 258 teléfonos reformateados o invalidados; 9 valores formados solo por puntuación convertidos a NA; 1 prefijo decorativo corregido; 2,161 departamentos y 2,339 municipios normalizados; 2,161 zonas preservadas; 505 valores de `PLAN` y 2,026 de `DEPARTAMENTAL` normalizados. |
 
 ## Interpretación por métrica
 
@@ -29,12 +29,12 @@ La variable adicional evita una pérdida de información. En el crudo, `CIUDAD C
 
 ### Valores faltantes
 
-El conteo inicial anterior de 4,219 celdas subestimaba las ausencias porque ignoraba puntos, `SIN DATO` y numerosas cadenas de guiones. El conteo corregido es 4,636. El porcentaje bruto posterior aumenta por dos razones legítimas:
+El conteo inicial anterior de 4,219 celdas subestimaba las ausencias porque ignoraba puntos, `SIN DATO` y numerosas cadenas de signos. La corrección final del checkpoint B → C amplió el criterio a cualquier cadena sin caracteres alfanuméricos; el conteo corregido es 4,645. El porcentaje bruto posterior aumenta por dos razones legítimas:
 
 1. Se hacen explícitos como `NA` teléfonos y distritos incompletos que antes parecían texto válido.
 2. `ZONA_CAPITAL` solo aplica a 2,161 registros y por diseño es `NA` en los otros 9,707.
 
-Al comparar únicamente las 17 variables originales después de retirar las filas vacías, el candidato contiene 4,432 faltantes (2.20 %). No se imputaron datos sin evidencia.
+Al comparar únicamente las 17 variables originales después de retirar las filas vacías, el candidato contiene 4,441 faltantes (2.20 %). No se imputaron datos sin evidencia.
 
 ### Duplicados
 
