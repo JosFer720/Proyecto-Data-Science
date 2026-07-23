@@ -429,6 +429,97 @@ El conjunto candidato conserva una fila por código oficial, añade `ZONA_CAPITA
 )
 
 
+guardar(
+    "05_validacion.ipynb",
+    [
+        markdown(
+            """
+# Validación automática del conjunto candidato
+
+Este notebook ejecuta las siete comprobaciones de calidad exigidas sobre el CSV candidato. Todas las reglas provienen de `src/validadores.py`, la misma implementación utilizada por `pytest`, y cada fallo incluye cantidad, explicación y ejemplos suficientes para corregirlo.
+"""
+        ),
+        markdown("## Configuración y carga reproducible"),
+        codigo(
+            SETUP
+            + "\nfrom src.validadores import ("
+            + "\n    cargar_csv_para_validacion,"
+            + "\n    ejecutar_validaciones,"
+            + "\n    resumen_validaciones,"
+            + "\n)"
+        ),
+        codigo(
+            """
+RUTA_CANDIDATO = ROOT / "data" / "processed" / "establecimientos_limpios_candidato.csv"
+df_candidato = cargar_csv_para_validacion(RUTA_CANDIDATO)
+
+print(f"Registros: {df_candidato.shape[0]:,}")
+print(f"Variables: {df_candidato.shape[1]}")
+df_candidato.head()
+"""
+        ),
+        markdown("## Ejecución de las siete validaciones"),
+        codigo(
+            """
+resultados = ejecutar_validaciones(df_candidato, max_ejemplos=5)
+resumen = resumen_validaciones(resultados)
+resumen
+"""
+        ),
+        markdown(
+            """
+Las pruebas comprueban, en orden: duplicados exactos; espacios en textos; teléfonos; geografía oficial; esquema y tipos; categorías equivalentes por escritura; y valores inválidos identificados durante el diagnóstico.
+"""
+        ),
+        markdown("## Detalle de fallos y ejemplos"),
+        codigo(
+            """
+fallos = [resultado for resultado in resultados if not resultado.aprobada]
+if not fallos:
+    print("No se encontraron fallos; las siete validaciones fueron aprobadas.")
+else:
+    for resultado in fallos:
+        print(f"\\n{resultado.prueba}: {resultado.errores} error(es)")
+        print(resultado.detalle)
+        print(pd.DataFrame(resultado.ejemplos).to_string(index=False))
+"""
+        ),
+        markdown("## Comprobación inequívoca del resultado"),
+        codigo(
+            """
+assert len(resultados) == 7, "Deben ejecutarse exactamente siete validaciones."
+assert all(resultado.aprobada for resultado in resultados), {
+    resultado.prueba: resultado.ejemplos for resultado in fallos
+}
+assert resumen["Errores"].sum() == 0
+
+print("VALIDACIÓN APROBADA: 7 de 7 pruebas superadas con cero errores.")
+"""
+        ),
+        markdown("## Esquema validado"),
+        codigo(
+            """
+pd.DataFrame(
+    {
+        "Variable": df_candidato.columns,
+        "Tipo observado": [str(tipo) for tipo in df_candidato.dtypes],
+        "Valores faltantes": [int(df_candidato[col].isna().sum()) for col in df_candidato],
+        "Valores únicos": [int(df_candidato[col].nunique(dropna=True)) for col in df_candidato],
+    }
+)
+"""
+        ),
+        markdown(
+            """
+## Resultado
+
+El conjunto candidato supera las siete reglas automáticas y puede avanzar a la comparación formal Antes/Después. Este resultado no renombra ni exporta todavía el CSV final.
+"""
+        ),
+    ],
+)
+
+
 print("Notebooks generados:")
 for path in sorted(NOTEBOOKS.glob("*.ipynb")):
     print(path.relative_to(ROOT))

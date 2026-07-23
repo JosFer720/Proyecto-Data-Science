@@ -6,7 +6,7 @@
 - **Fecha de extracción:** 2026-07-18.
 - **Filtro:** `NIVEL ESCOLAR = DIVERSIFICADO`.
 - **Cobertura:** los 22 departamentos; el buscador consultó `CIUDAD CAPITAL` como entidad separada de `GUATEMALA`.
-- **Versión actual:** `v0.1.0-candidato`, pendiente de validación independiente y exportación final.
+- **Versión actual:** `v0.1.0-candidato`, validada automáticamente y pendiente de exportación final.
 - **CSV crudo:** `data/raw/establecimientos_raw.csv`, 11,891 filas y 17 variables.
 - **SHA-256 crudo:** `bbc1fa3b26b2509a22d547dc81dfa3b8bbc470f33c26b210de5b448d8d1a1d1c`.
 - **CSV limpio candidato:** `data/processed/establecimientos_limpios_candidato.csv`, 11,868 filas y 18 variables.
@@ -44,3 +44,30 @@ La columna “Valores posibles” describe el conjunto candidato. `NA` significa
 - Dos filas con nombre, dirección o teléfono similares no se fusionan si poseen códigos MINEDUC diferentes sin confirmación explícita de la fuente.
 - Los 781 pares candidatos quedaron documentados individualmente en `data/processed/duplicados_revisados.csv`; todos se conservaron en esta versión.
 - Las 23 filas completamente vacías del CSV crudo se eliminaron porque eran separadores sin establecimiento asociado.
+
+## Anexo de reglas de validación
+
+Las reglas se ejecutan desde `src/validadores.py` y se verifican tanto con `pytest` como con `05_validacion.ipynb`. El candidato actual supera las siete comprobaciones con cero errores.
+
+| Variable | Tipo esperado | Nulabilidad | Regla automática principal |
+|---|---|---|---|
+| `CODIGO` | `string` | No permite `NA` | Patrón `NN-NN-NNNN-NN`, valor único y sin duplicados. |
+| `DISTRITO` | `string` | Permite `NA` | Patrón `NN-NNN` o `NN-NN-NNNN` cuando está informado. |
+| `DEPARTAMENTO` | `string` | No permite `NA` | Pertenece al catálogo de 22 departamentos. |
+| `MUNICIPIO` | `string` | No permite `NA` | Pertenece al catálogo de 340 municipios y al departamento de la fila. |
+| `ZONA_CAPITAL` | `string` | Permite `NA` | Patrón `ZONA 1` a `ZONA 25`; si existe, departamento y municipio deben ser `GUATEMALA`. |
+| `ESTABLECIMIENTO` | `string` | Permite `NA` | Sin espacios extremos/múltiples, centinelas literales ni puntuación residual. |
+| `DIRECCION` | `string` | Permite `NA` | Sin espacios extremos/múltiples, centinelas literales ni puntuación residual. |
+| `TELEFONO` | `string` | Permite `NA` | Uno o más números de ocho dígitos iniciados entre 2 y 7, separados por ` / `. |
+| `SUPERVISOR` | `string` | Permite `NA` | Sin espacios extremos/múltiples, centinelas literales ni puntuación residual. |
+| `DIRECTOR` | `string` | Permite `NA` | Sin espacios extremos/múltiples, centinelas literales ni puntuación residual. |
+| `NIVEL` | `string` | No permite `NA` | Únicamente `DIVERSIFICADO`. |
+| `SECTOR` | `string` | No permite `NA` | Una de las cuatro categorías documentadas. |
+| `AREA` | `string` | No permite `NA` | `URBANA`, `RURAL` o `SIN ESPECIFICAR`. |
+| `STATUS` | `string` | No permite `NA` | Uno de los cinco estados documentados. |
+| `MODALIDAD` | `string` | No permite `NA` | `MONOLINGUE` o `BILINGUE`. |
+| `JORNADA` | `string` | No permite `NA` | Una de las seis jornadas documentadas. |
+| `PLAN` | `string` | No permite `NA` | Una de las trece categorías documentadas, sin fusionar frecuencias semipresenciales. |
+| `DEPARTAMENTAL` | `string` | No permite `NA` | Una de las 26 direcciones permitidas y consistente con `DEPARTAMENTO`. |
+
+Además del esquema por variable, la suite comprueba duplicados exactos y categorías equivalentes que solo difieran en mayúsculas, tildes, espacios o puntuación. Cada fallo reporta hasta cinco ejemplos con índice, código, variable, valor y regla incumplida.

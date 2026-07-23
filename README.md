@@ -7,9 +7,9 @@ Pipeline reproducible para obtener, diagnosticar y limpiar los registros de esta
 - Obtención y diagnóstico inicial implementados.
 - Plan de limpieza documentado para las 17 variables originales.
 - Limpieza reproducible implementada.
-- Conjunto limpio **candidato** disponible para validación independiente.
+- Conjunto limpio **candidato** validado automáticamente: 7 de 7 pruebas aprobadas.
 - Registro de transformaciones y revisión de duplicados parciales generados.
-- Pendiente: pruebas automáticas independientes, versión final del codebook, PDF y exportación del único CSV final.
+- Pendiente: versión final del codebook, PDF y exportación del único CSV final.
 
 El candidato no debe renombrarse todavía como `establecimientos_clean.csv`; ese nombre se reserva para el archivo que supere la validación final.
 
@@ -36,7 +36,10 @@ data/
 notebooks/
 ├── 01_obtencion.ipynb
 ├── 02_diagnostico.ipynb
-└── 04_limpieza.ipynb
+├── 04_limpieza.ipynb
+└── 05_validacion.ipynb
+tests/
+└── test_validacion.py
 src/
 ├── catalogos.py
 ├── diagnostico.py
@@ -69,9 +72,11 @@ Ejecutar desde la raíz del repositorio:
 .venv/bin/python -m jupyter nbconvert --execute --to notebook --inplace notebooks/01_obtencion.ipynb
 .venv/bin/python -m jupyter nbconvert --execute --to notebook --inplace notebooks/02_diagnostico.ipynb
 .venv/bin/python -m jupyter nbconvert --execute --to notebook --inplace notebooks/04_limpieza.ipynb
+.venv/bin/python -m pytest -q
+.venv/bin/python -m jupyter nbconvert --execute --to notebook --inplace notebooks/05_validacion.ipynb
 ```
 
-El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo reproduce el diagnóstico. El tercero regenera el candidato limpio y los dos archivos de trazabilidad.
+El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo reproduce el diagnóstico. El tercero regenera el candidato limpio y los dos archivos de trazabilidad. Finalmente, `pytest` comprueba que cada regla detecte errores deliberados y el notebook `05` presenta el resultado de las siete validaciones sobre el candidato.
 
 ## Decisiones importantes
 
@@ -89,6 +94,8 @@ El primer notebook valida el CSV crudo y actualiza su manifiesto. El segundo rep
 - `03_plan_limpieza.md`: reglas definidas antes de transformar.
 - `transformaciones.csv`: resumen cuantitativo de cada transformación.
 - `duplicados_revisados.csv`: revisión de cada par candidato.
+- `tests/test_validacion.py`: pruebas positivas y escenarios alterados para las siete reglas.
+- `05_validacion.ipynb`: resumen aprobado/fallido, cantidades y ejemplos de validación.
 - `codebook.md`: definición, dominio y tratamiento de cada variable.
 - `informe_calidad.md`: comparación cuantitativa Antes/Después.
 
